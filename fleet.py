@@ -53,7 +53,7 @@ with data_tab:
             else:
                 row['InternalNotes'] = str(row['InternalNotes'])
                 
-                pattern_pictures = define_date_pattern('Updated Pictures|Updated Photos|Pictures Verified|Photos Verified')
+                pattern_pictures = define_date_pattern('Updated Pictures|Updated Photos|Verified Pictures|Verified Photos')
                 pattern_listed = define_date_pattern('Listed|Quick Listed')
                 pattern_inspections = define_date_pattern('Inspection Uploaded')
                 pattern_price_dates = define_date_pattern('Updated Price')
