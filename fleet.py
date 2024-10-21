@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import re
+from datetime import date
+
+today = date.today().strftime('%m.%d.%y')
 
 st.set_page_config(layout="wide")
 st.title('Sandhills Fleet App')
@@ -13,10 +16,10 @@ data = upload_tab.file_uploader('Upload CSV File', type='csv')
 
 #### FUNCTIONS
 def define_date_pattern(pattern_string):
-    return r'(\d{1,2}[-./]\d{1,2}[-./]\d{2})\s*(-\s*(' + pattern_string + r')|\s*(' + pattern_string + r')\s*-)(?!.{0,10}FB)'
+    return r'(\d{1,2}[-./]\d{1,2}[-./]\d{2})\s*(-\s*(' + pattern_string + r')|\s*(' + pattern_string + r')\s*-)(?!\bFB\b)'
 
 def define_price_pattern(pattern_string):
-    return r'\d{1,2}/\d{1,2}/\d{2}\s*-\s*(' + pattern_string + r')\s*(\d{1,3}(?:,\d{3})*)\s*(?!.{0,10}FB)'
+    return r'\d{1,2}/\d{1,2}/\d{2}\s*-\s*(' + pattern_string + r')\s*(\d{1,3}(?:,\d{3})*)\s*(?!\bFB\b)'
 
 def check_pattern(pattern, string):
     return re.search(pattern, string, re.IGNORECASE)
@@ -55,7 +58,7 @@ with data_tab:
                 
                 pattern_pictures = define_date_pattern('Updated Pictures|Updated Photos|Verified Pictures|Verified Photos')
                 pattern_listed = define_date_pattern('Listed|Quick Listed')
-                pattern_inspections = define_date_pattern('Inspection Uploaded')
+                pattern_inspections = define_date_pattern('Inspection Uploaded|Uploaded Inspection')
                 pattern_price_dates = define_date_pattern('Updated Price')
                 pattern_price_amounts = define_price_pattern('Updated Price')
                 pattern_starting_date = define_date_pattern('Starting Price')
@@ -73,14 +76,21 @@ with data_tab:
                     df.at[index, 'UpdatedPictures'] = match_pictures.group(1)
                 elif match_listed:
                     df.at[index, 'UpdatedPictures'] = match_listed.group(1)
+                    
                 if match_inspections:
                     df.at[index, 'InspectionUploaded'] = match_inspections.group(1)
+                    
                 if match_price_dates:
                     df.at[index, 'UpdatedPriceDate'] = match_price_dates.group(1)
+                elif match_starting_date:
+                    df.at[index, 'UpdatedPriceDate'] = match_starting_date.group(1)
+                    
                 if match_price_amounts:
                     df.at[index, 'UpdatedPriceAmount'] = match_price_amounts.group(2)
+                    
                 if match_starting_date:
                     df.at[index, 'StartingDate'] = match_starting_date.group(1)
+                    
                 if match_starting_price:
                     df.at[index, 'StartingPrice'] = match_starting_price.group(2)
                     
@@ -112,5 +122,6 @@ with data_tab:
         df = df.sort_values(by=['StartingDate', 'PhotoAging', 'PriceAging'], ascending=[True, False, False])
         
         st.dataframe(df)
-        st.download_button('Download Data', df.to_csv(index=False), 'fleet_data.csv', 'text/csv')
 
+        output_filename = 'fleet_data_' + today + '.csv'
+        st.download_button('Download Data', df.to_csv(index=False), output_filename, 'text/csv')
